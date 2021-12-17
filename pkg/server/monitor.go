@@ -9,9 +9,10 @@ import (
 
 	"github.com/gorilla/mux"
 	"github.com/prometheus/client_golang/prometheus"
+	"github.com/prometheus/client_golang/prometheus/collectors"
 	"github.com/prometheus/client_golang/prometheus/promhttp"
-	"github.com/thegeeklab/audit-exporter/client"
-	"github.com/thegeeklab/audit-exporter/collector"
+	"github.com/thegeeklab/audit-exporter/pkg/client"
+	"github.com/thegeeklab/audit-exporter/pkg/collector"
 	"golang.org/x/net/netutil"
 	"golang.org/x/sys/unix"
 	"golang.org/x/xerrors"
@@ -37,27 +38,29 @@ type Monitor struct {
 	server         *http.Server
 }
 
-func NewMonitor(settings MonitorSettings) (*Monitor, error) {
+func NewMonitor(settings Settings) (*Monitor, error) {
 	router := mux.NewRouter()
 
 	registry := prometheus.NewRegistry()
-	registry.MustRegister(prometheus.NewProcessCollector(prometheus.ProcessCollectorOpts{}))
-	registry.MustRegister(prometheus.NewGoCollector())
+	registry.MustRegister(collectors.NewProcessCollector(collectors.ProcessCollectorOpts{}))
+	registry.MustRegister(collectors.NewGoCollector())
+
 	trivyCollector := collector.NewTrivyCollector(
-		&client.TrivyClient{},
-		settings.TrivyConcurrency,
+		client.TrivyClient{},
+		settings.monitor.TrivyConcurrency,
 	)
 	registry.MustRegister(trivyCollector)
 	ctx := context.Background()
 	if err := trivyCollector.Scan(ctx); err != nil {
 		return nil, xerrors.Errorf("failed to scan of trivy collector: %w", err)
 	}
-	trivyCollector.StartLoop(ctx, settings.CollectorLoopInterval)
+	trivyCollector.StartLoop(ctx, settings.monitor.CollectorLoopInterval)
 
 	router.Handle(metricsPath, promhttp.Handler())
 
 	var listener net.Listener
-	if settings.ReUsePort {
+	var err error
+	if settings.monitor.ReUsePort {
 		listenConfig := &net.ListenConfig{
 			Control: func(network string, address string, c syscall.RawConn) error {
 				var innerErr error
@@ -71,28 +74,23 @@ func NewMonitor(settings MonitorSettings) (*Monitor, error) {
 				}
 				return nil
 			},
-			KeepAlive: settings.TCPKeepAliveInterval,
+			KeepAlive: settings.monitor.TCPKeepAliveInterval,
 		}
-		listener, err = listenConfig.Listen(context.Background(), "tcp", settings.Address)
+		listener, err = listenConfig.Listen(context.Background(), "tcp", settings.monitor.Address)
 	} else {
-		listener, err = net.Listen("tcp", settings.Address)
+		listener, err = net.Listen("tcp", settings.monitor.Address)
 	}
 
 	if err != nil {
-		return nil, xerrors.Errorf("could not listen %s: %w", settings.Address, err)
+		return nil, xerrors.Errorf("could not listen %s: %w", settings.monitor.Address, err)
 	}
 
 	server := &http.Server{
-		Handler: &promhttp.Handler{
-			Handler: router,
-			FormatSpanName: func(r *http.Request) string {
-				return r.Method + " " + r.URL.Path
-			},
-		},
+		Handler: promhttp.Handler(),
 	}
-	server.SetKeepAlivesEnabled(settings.KeepAlived)
+	server.SetKeepAlivesEnabled(settings.monitor.KeepAlived)
 	return &Monitor{
-		maxConnections: settings.MaxConnections,
+		maxConnections: settings.monitor.MaxConnections,
 		listener:       listener,
 		server:         server,
 	}, nil
