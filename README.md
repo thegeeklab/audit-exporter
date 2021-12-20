@@ -33,6 +33,32 @@ go build -v -a -tags netgo -o release/audit-exporter ./cmd/audit-exporter/
 
 TBD
 
+```Text
+ HELP trivy_vulnerabilities Vulnerabilities detected by trivy
+# TYPE trivy_vulnerabilities gauge
+trivy_vulnerabilities{artifactName="mongo:3.6",artifactType="container_image",fixedVersion="",installedVersion="1.0.2g-1ubuntu4.19",pkgName="libssl1.0.0",severity="LOW",vulnerabilityId="CVE-2021-3601"} 1
+trivy_vulnerabilities{artifactName="mongo:3.6",artifactType="container_image",fixedVersion="",installedVersion="1.0.2g-1ubuntu4.19",pkgName="openssl",severity="LOW",vulnerabilityId="CVE-2021-3601"} 1
+trivy_vulnerabilities{artifactName="mongo:3.6",artifactType="container_image",fixedVersion="",installedVersion="2.23-0ubuntu11.2",pkgName="libc-bin",severity="LOW",vulnerabilityId="CVE-2021-33574"} 1
+trivy_vulnerabilities{artifactName="mongo:3.6",artifactType="container_image",fixedVersion="",installedVersion="2.23-0ubuntu11.2",pkgName="libc-bin",severity="MEDIUM",vulnerabilityId="CVE-2021-35942"} 1
+trivy_vulnerabilities{artifactName="mongo:3.6",artifactType="container_image",fixedVersion="",installedVersion="2.23-0ubuntu11.2",pkgName="libc-bin",severity="MEDIUM",vulnerabilityId="CVE-2021-38604"} 1
+trivy_vulnerabilities{artifactName="mongo:3.6",artifactType="container_image",fixedVersion="",installedVersion="2.23-0ubuntu11.2",pkgName="libc6",severity="LOW",vulnerabilityId="CVE-2021-33574"} 1
+trivy_vulnerabilities{artifactName="mongo:3.6",artifactType="container_image",fixedVersion="",installedVersion="2.23-0ubuntu11.2",pkgName="libc6",severity="MEDIUM",vulnerabilityId="CVE-2021-35942"} 1
+trivy_vulnerabilities{artifactName="mongo:3.6",artifactType="container_image",fixedVersion="",installedVersion="2.23-0ubuntu11.2",pkgName="libc6",severity="MEDIUM",vulnerabilityId="CVE-2021-38604"} 1
+trivy_vulnerabilities{artifactName="mongo:3.6",artifactType="container_image",fixedVersion="",installedVersion="2.23-0ubuntu11.2",pkgName="multiarch-support",severity="LOW",vulnerabilityId="CVE-2021-33574"} 1
+trivy_vulnerabilities{artifactName="mongo:3.6",artifactType="container_image",fixedVersion="",installedVersion="2.23-0ubuntu11.2",pkgName="multiarch-support",severity="MEDIUM",vulnerabilityId="CVE-2021-35942"} 1
+trivy_vulnerabilities{artifactName="mongo:3.6",artifactType="container_image",fixedVersion="",installedVersion="2.23-0ubuntu11.2",pkgName="multiarch-support",severity="MEDIUM",vulnerabilityId="CVE-2021-38604"} 1
+trivy_vulnerabilities{artifactName="mongo:3.6",artifactType="container_image",fixedVersion="2.23-0ubuntu11.3",installedVersion="2.23-0ubuntu11.2",pkgName="libc-bin",severity="LOW",vulnerabilityId="CVE-2009-5155"} 1
+trivy_vulnerabilities{artifactName="mongo:3.6",artifactType="container_image",fixedVersion="2.23-0ubuntu11.3",installedVersion="2.23-0ubuntu11.2",pkgName="libc-bin",severity="LOW",vulnerabilityId="CVE-2020-6096"} 1
+trivy_vulnerabilities{artifactName="mongo:3.6",artifactType="container_image",fixedVersion="2.23-0ubuntu11.3",installedVersion="2.23-0ubuntu11.2",pkgName="libc6",severity="LOW",vulnerabilityId="CVE-2009-5155"} 1
+trivy_vulnerabilities{artifactName="mongo:3.6",artifactType="container_image",fixedVersion="2.23-0ubuntu11.3",installedVersion="2.23-0ubuntu11.2",pkgName="libc6",severity="LOW",vulnerabilityId="CVE-2020-6096"} 1
+trivy_vulnerabilities{artifactName="mongo:3.6",artifactType="container_image",fixedVersion="2.23-0ubuntu11.3",installedVersion="2.23-0ubuntu11.2",pkgName="multiarch-support",severity="LOW",vulnerabilityId="CVE-2009-5155"} 1
+trivy_vulnerabilities{artifactName="mongo:3.6",artifactType="container_image",fixedVersion="2.23-0ubuntu11.3",installedVersion="2.23-0ubuntu11.2",pkgName="multiarch-support",severity="LOW",vulnerabilityId="CVE-2020-6096"} 1
+# HELP trivy_vulnerabilities_sum Vulnerabilities detected by trivy
+# TYPE trivy_vulnerabilities_sum gauge
+trivy_vulnerabilities_sum{artifactName="mongo:3.6",artifactType="container_image",severity="LOW"} 11
+trivy_vulnerabilities_sum{artifactName="mongo:3.6",artifactType="container_image",severity="MEDIUM"} 6
+```
+
 ## Examples
 
 TBD
