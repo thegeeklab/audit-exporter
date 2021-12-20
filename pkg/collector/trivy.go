@@ -26,14 +26,14 @@ type TrivyCollector struct {
 	settings           Settings
 	Vulnerabilities    *prometheus.GaugeVec
 	VulnerabilitiesSum *prometheus.GaugeVec
-	logger             logrus.Logger
+	logger             *logrus.Logger
 }
 
 // NewTrivyCollector creates a new collector instance
 func NewTrivyCollector(
 	trivyClient client.TrivyClient,
 	settings Settings,
-	logger logrus.Logger,
+	logger *logrus.Logger,
 ) *TrivyCollector {
 	return &TrivyCollector{
 		logger:   logger,

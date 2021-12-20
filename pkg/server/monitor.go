@@ -39,7 +39,7 @@ type Monitor struct {
 }
 
 // NewMonitor creates a new Monitor instance providing http metrics server
-func NewMonitor(settings MonitorSettings, logger logrus.Logger, mcollectors []collector.ICollector) (*Monitor, error) {
+func NewMonitor(settings MonitorSettings, logger *logrus.Logger, mcollectors []collector.ICollector) (*Monitor, error) {
 	router := mux.NewRouter()
 
 	registry := prometheus.NewRegistry()

@@ -36,17 +36,21 @@ func run(settings *server.Settings) cli.ActionFunc {
 	return func(ctx *cli.Context) error {
 		collectors := []collector.ICollector{}
 		inst := server.NewInstance(*settings)
+		inst.Logger.SetFormatter(&logrus.TextFormatter{
+			// DisableColors: true,
+			FullTimestamp: true,
+		})
 		inst.Logger.Infof("Start monitor at %s", settings.Monitor.Address)
 
 		trivyCollector := collector.NewTrivyCollector(
 			client.TrivyClient{},
 			settings.Trivy,
-			inst.Logger,
+			&inst.Logger,
 		)
 
 		collectors = append(collectors, trivyCollector)
 
-		monitor, err := server.NewMonitor(settings.Monitor, inst.Logger, collectors)
+		monitor, err := server.NewMonitor(settings.Monitor, &inst.Logger, collectors)
 		if err != nil {
 			inst.Logger.Fatal(xerrors.Errorf("Failed to create monitor: %w", err))
 		}
