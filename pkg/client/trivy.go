@@ -10,6 +10,7 @@ import (
 	"golang.org/x/xerrors"
 )
 
+// TrivyClient struct
 type TrivyClient struct{}
 
 func (c *TrivyClient) Do(ctx context.Context, image string) ([]byte, error) {
@@ -27,9 +28,8 @@ func (c *TrivyClient) Do(ctx context.Context, image string) ([]byte, error) {
 		i := strings.Index(string(result), "error in image scan")
 		if i == -1 {
 			return nil, xerrors.Errorf("failed to execute trivy: %w", err)
-		} else {
-			return nil, xerrors.Errorf("failed to execute trivy: %s", result[i:len(result)-1])
 		}
+		return nil, xerrors.Errorf("failed to execute trivy: %s", result[i:len(result)-1])
 	}
 	body, err := ioutil.ReadFile(filename)
 	if err != nil {

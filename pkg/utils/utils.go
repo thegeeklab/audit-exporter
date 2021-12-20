@@ -1,19 +1,17 @@
 package utils
 
+// DupCount creates a map of item:sum for each duplicate item in a slice
 func DupCount(list []string) map[string]int {
-
-	duplicate_frequency := make(map[string]int)
+	dupFreq := make(map[string]int)
 
 	for _, item := range list {
-		// check if the item/element exist in the duplicate_frequency map
-
-		_, exist := duplicate_frequency[item]
+		_, exist := dupFreq[item]
 
 		if exist {
-			duplicate_frequency[item] += 1 // increase counter by 1 if already in the map
+			dupFreq[item]++
 		} else {
-			duplicate_frequency[item] = 1 // else start counting from 1
+			dupFreq[item] = 1
 		}
 	}
-	return duplicate_frequency
+	return dupFreq
 }

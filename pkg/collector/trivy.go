@@ -17,11 +17,12 @@ import (
 
 const (
 	namespace = "trivy"
+	name      = "trivy"
 )
 
 type TrivyCollector struct {
 	trivyClient        client.TrivyClient
-	concurrency        int64
+	settings           CollectorSettings
 	Vulnerabilities    *prometheus.GaugeVec
 	VulnerabilitiesSum *prometheus.GaugeVec
 	logger             logrus.Logger
@@ -29,12 +30,12 @@ type TrivyCollector struct {
 
 func NewTrivyCollector(
 	trivyClient client.TrivyClient,
-	concurrency int64,
+	settings CollectorSettings,
 	logger logrus.Logger,
 ) *TrivyCollector {
 	return &TrivyCollector{
-		logger:      logger,
-		concurrency: concurrency,
+		logger:   logger,
+		settings: settings,
 		Vulnerabilities: prometheus.NewGaugeVec(prometheus.GaugeOpts{
 			Namespace: namespace,
 			Name:      "vulnerabilities",
@@ -75,7 +76,7 @@ func (c *TrivyCollector) Scan(ctx context.Context) error {
 		return xerrors.Errorf("failed to get containers: %w", err)
 	}
 
-	semaphore := make(chan struct{}, c.concurrency)
+	semaphore := make(chan struct{}, c.settings.ClientConcurrency)
 	defer close(semaphore)
 
 	wg := sync.WaitGroup{}
@@ -93,13 +94,13 @@ func (c *TrivyCollector) Scan(ctx context.Context) error {
 			}()
 			out, err := c.trivyClient.Do(ctx, image)
 			if err != nil {
-				c.logger.Errorf("Failed to detect vulnerability at %s: %s\n", image, err.Error())
+				c.logger.Errorf("Failed to detect vulnerability at %s: %s", image, err.Error())
 				return
 			}
 
 			var response client.TrivyResponse
 			if err := json.Unmarshal([]byte(out), &response); err != nil {
-				c.logger.Errorf("Failed to parse trivy response at %s: %s\n", image, err.Error())
+				c.logger.Errorf("Failed to parse trivy response at %s: %s", image, err.Error())
 				return
 			}
 			func() {
@@ -158,7 +159,7 @@ func (c *TrivyCollector) StartLoop(ctx context.Context, interval time.Duration) 
 			select {
 			case <-t.C:
 				if err := c.Scan(ctx); err != nil {
-					c.logger.Errorf("Failed to scan: %s\n", err.Error())
+					c.logger.Errorf("Failed to scan: %s", err.Error())
 				}
 			case <-ctx.Done():
 				return
@@ -184,4 +185,12 @@ func (c *TrivyCollector) Collect(ch chan<- prometheus.Metric) {
 	for _, collector := range c.collectors() {
 		collector.Collect(ch)
 	}
+}
+
+func (c *TrivyCollector) Name() string {
+	return name
+}
+
+func (c *TrivyCollector) Settings() CollectorSettings {
+	return c.settings
 }

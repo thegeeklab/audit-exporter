@@ -7,6 +7,8 @@ import (
 	"syscall"
 
 	"github.com/sirupsen/logrus"
+	"github.com/thegeeklab/audit-exporter/pkg/client"
+	"github.com/thegeeklab/audit-exporter/pkg/collector"
 	"github.com/thegeeklab/audit-exporter/pkg/server"
 	"github.com/urfave/cli/v2"
 	"golang.org/x/xerrors"
@@ -14,9 +16,6 @@ import (
 
 // Version of current build
 var Version = "devel"
-
-type Instance struct {
-}
 
 func main() {
 	settings := &server.Settings{}
@@ -35,10 +34,19 @@ func main() {
 
 func run(settings *server.Settings) cli.ActionFunc {
 	return func(ctx *cli.Context) error {
+		collectors := []collector.ICollector{}
 		inst := server.NewInstance(*settings)
-
 		inst.Logger.Infof("Start monitor at %s", settings.Monitor.Address)
-		monitor, err := server.NewMonitor(*settings, inst.Logger)
+
+		trivyCollector := collector.NewTrivyCollector(
+			client.TrivyClient{},
+			settings.Trivy,
+			inst.Logger,
+		)
+
+		collectors = append(collectors, trivyCollector)
+
+		monitor, err := server.NewMonitor(settings.Monitor, inst.Logger, collectors)
 		if err != nil {
 			inst.Logger.Fatal(xerrors.Errorf("Failed to create monitor: %w", err))
 		}
