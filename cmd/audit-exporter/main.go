@@ -37,9 +37,10 @@ func run(settings *server.Settings) cli.ActionFunc {
 	return func(ctx *cli.Context) error {
 		inst := server.NewInstance(*settings)
 
-		monitor, err := server.NewMonitor(*settings)
+		inst.Logger.Infof("Start monitor at %s", settings.Monitor.Address)
+		monitor, err := server.NewMonitor(*settings, inst.Logger)
 		if err != nil {
-			return xerrors.Errorf("failed to create monitor: %w", err)
+			inst.Logger.Fatal(xerrors.Errorf("Failed to create monitor: %w", err))
 		}
 
 		inst.AddProcessor(monitor)
@@ -48,7 +49,7 @@ func run(settings *server.Settings) cli.ActionFunc {
 		quit := make(chan os.Signal, 1)
 		signal.Notify(quit, syscall.SIGTERM)
 		<-quit
-		inst.logger.Infof("Attempt to shutdown instance...\n")
+		inst.Logger.Infof("Attempt to shutdown instance")
 
 		inst.Shutdown(context.Background())
 

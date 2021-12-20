@@ -9,7 +9,9 @@ import (
 	dtypes "github.com/docker/docker/api/types"
 	dclient "github.com/docker/docker/client"
 	"github.com/prometheus/client_golang/prometheus"
+	"github.com/sirupsen/logrus"
 	"github.com/thegeeklab/audit-exporter/pkg/client"
+	"github.com/thegeeklab/audit-exporter/pkg/utils"
 	"golang.org/x/xerrors"
 )
 
@@ -18,22 +20,31 @@ const (
 )
 
 type TrivyCollector struct {
-	trivyClient     client.TrivyClient
-	concurrency     int64
-	vulnerabilities *prometheus.GaugeVec
+	trivyClient        client.TrivyClient
+	concurrency        int64
+	Vulnerabilities    *prometheus.GaugeVec
+	VulnerabilitiesSum *prometheus.GaugeVec
+	logger             logrus.Logger
 }
 
 func NewTrivyCollector(
 	trivyClient client.TrivyClient,
 	concurrency int64,
+	logger logrus.Logger,
 ) *TrivyCollector {
 	return &TrivyCollector{
+		logger:      logger,
 		concurrency: concurrency,
-		vulnerabilities: prometheus.NewGaugeVec(prometheus.GaugeOpts{
+		Vulnerabilities: prometheus.NewGaugeVec(prometheus.GaugeOpts{
 			Namespace: namespace,
 			Name:      "vulnerabilities",
 			Help:      "Vulnerabilities detected by trivy",
-		}, []string{"image", "vulnerabilityId", "pkgName", "installedVersion", "severity", "fixedVersion"}),
+		}, []string{"artifactName", "artifactType", "vulnerabilityId", "pkgName", "installedVersion", "severity", "fixedVersion"}),
+		VulnerabilitiesSum: prometheus.NewGaugeVec(prometheus.GaugeOpts{
+			Namespace: namespace,
+			Name:      "vulnerabilities_sum",
+			Help:      "Vulnerabilities detected by trivy",
+		}, []string{"artifactName", "artifactType", "severity"}),
 	}
 }
 
@@ -56,6 +67,9 @@ func (c *TrivyCollector) Scan(ctx context.Context) error {
 	}
 
 	cli, err := dclient.NewClientWithOpts(dclient.FromEnv, dclient.WithAPIVersionNegotiation())
+	if err != nil {
+		return xerrors.Errorf("failed to connect to docker daemon: %w", err)
+	}
 	containers, err := cli.ContainerList(ctx, dtypes.ContainerListOptions{})
 	if err != nil {
 		return xerrors.Errorf("failed to get containers: %w", err)
@@ -79,36 +93,53 @@ func (c *TrivyCollector) Scan(ctx context.Context) error {
 			}()
 			out, err := c.trivyClient.Do(ctx, image)
 			if err != nil {
-				// c.logger.Errorf("Failed to detect vulnerability at %s: %s\n", image, err.Error())
+				c.logger.Errorf("Failed to detect vulnerability at %s: %s\n", image, err.Error())
 				return
 			}
 
-			var responses []client.TrivyResponse
-			if err := json.Unmarshal(out, &responses); err != nil {
-				// c.logger.Errorf("Failed to parse trivy response at %s: %s\n", image, err.Error())
+			var response client.TrivyResponse
+			if err := json.Unmarshal([]byte(out), &response); err != nil {
+				c.logger.Errorf("Failed to parse trivy response at %s: %s\n", image, err.Error())
 				return
 			}
 			func() {
 				mutex.Lock()
 				defer mutex.Unlock()
-				trivyResponses = append(trivyResponses, responses...)
+				trivyResponses = append(trivyResponses, response)
 			}()
 		}(image)
 	}
 	wg.Wait()
 
-	c.vulnerabilities.Reset()
+	c.Vulnerabilities.Reset()
+	c.VulnerabilitiesSum.Reset()
 	for _, trivyResponse := range trivyResponses {
-		for _, vulnerability := range trivyResponse.Vulnerabilities {
-			labels := []string{
-				trivyResponse.ExtractImage(),
-				vulnerability.VulnerabilityID,
-				vulnerability.PkgName,
-				vulnerability.InstalledVersion,
-				vulnerability.Severity,
-				vulnerability.FixedVersion,
+		for _, results := range trivyResponse.Results {
+			sevList := []string{}
+			for _, vulnerability := range results.Vulnerabilities {
+				if vulnerability.Severity != "" {
+					sevList = append(sevList, vulnerability.Severity)
+				}
+				labels := []string{
+					trivyResponse.ArtifactName,
+					trivyResponse.ArtifactType,
+					vulnerability.VulnerabilityID,
+					vulnerability.PkgName,
+					vulnerability.InstalledVersion,
+					vulnerability.Severity,
+					vulnerability.FixedVersion,
+				}
+				c.Vulnerabilities.WithLabelValues(labels...).Set(1)
 			}
-			c.vulnerabilities.WithLabelValues(labels...).Set(1)
+			sevMap := utils.DupCount(sevList)
+			for sev, sevSum := range sevMap {
+				labels := []string{
+					trivyResponse.ArtifactName,
+					trivyResponse.ArtifactType,
+					sev,
+				}
+				c.VulnerabilitiesSum.WithLabelValues(labels...).Set(float64(sevSum))
+			}
 		}
 	}
 
@@ -127,7 +158,7 @@ func (c *TrivyCollector) StartLoop(ctx context.Context, interval time.Duration) 
 			select {
 			case <-t.C:
 				if err := c.Scan(ctx); err != nil {
-					// c.logger.Errorf("Failed to scan: %s\n", err.Error())
+					c.logger.Errorf("Failed to scan: %s\n", err.Error())
 				}
 			case <-ctx.Done():
 				return
@@ -138,7 +169,8 @@ func (c *TrivyCollector) StartLoop(ctx context.Context, interval time.Duration) 
 
 func (c *TrivyCollector) collectors() []prometheus.Collector {
 	return []prometheus.Collector{
-		c.vulnerabilities,
+		c.Vulnerabilities,
+		c.VulnerabilitiesSum,
 	}
 }
 

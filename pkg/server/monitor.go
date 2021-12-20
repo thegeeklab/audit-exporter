@@ -11,6 +11,7 @@ import (
 	"github.com/prometheus/client_golang/prometheus"
 	"github.com/prometheus/client_golang/prometheus/collectors"
 	"github.com/prometheus/client_golang/prometheus/promhttp"
+	"github.com/sirupsen/logrus"
 	"github.com/thegeeklab/audit-exporter/pkg/client"
 	"github.com/thegeeklab/audit-exporter/pkg/collector"
 	"golang.org/x/net/netutil"
@@ -38,7 +39,7 @@ type Monitor struct {
 	server         *http.Server
 }
 
-func NewMonitor(settings Settings) (*Monitor, error) {
+func NewMonitor(settings Settings, logger logrus.Logger) (*Monitor, error) {
 	router := mux.NewRouter()
 
 	registry := prometheus.NewRegistry()
@@ -47,20 +48,21 @@ func NewMonitor(settings Settings) (*Monitor, error) {
 
 	trivyCollector := collector.NewTrivyCollector(
 		client.TrivyClient{},
-		settings.monitor.TrivyConcurrency,
+		settings.Monitor.TrivyConcurrency,
+		logger,
 	)
 	registry.MustRegister(trivyCollector)
 	ctx := context.Background()
 	if err := trivyCollector.Scan(ctx); err != nil {
-		return nil, xerrors.Errorf("failed to scan of trivy collector: %w", err)
+		return nil, xerrors.Errorf("failed scan of trivy collector: %w", err)
 	}
-	trivyCollector.StartLoop(ctx, settings.monitor.CollectorLoopInterval)
+	trivyCollector.StartLoop(ctx, settings.Monitor.CollectorLoopInterval)
 
-	router.Handle(metricsPath, promhttp.Handler())
+	router.Handle(metricsPath, promhttp.HandlerFor(registry, promhttp.HandlerOpts{}))
 
 	var listener net.Listener
 	var err error
-	if settings.monitor.ReUsePort {
+	if settings.Monitor.ReUsePort {
 		listenConfig := &net.ListenConfig{
 			Control: func(network string, address string, c syscall.RawConn) error {
 				var innerErr error
@@ -74,23 +76,23 @@ func NewMonitor(settings Settings) (*Monitor, error) {
 				}
 				return nil
 			},
-			KeepAlive: settings.monitor.TCPKeepAliveInterval,
+			KeepAlive: settings.Monitor.TCPKeepAliveInterval,
 		}
-		listener, err = listenConfig.Listen(context.Background(), "tcp", settings.monitor.Address)
+		listener, err = listenConfig.Listen(context.Background(), "tcp", settings.Monitor.Address)
 	} else {
-		listener, err = net.Listen("tcp", settings.monitor.Address)
+		listener, err = net.Listen("tcp", settings.Monitor.Address)
 	}
 
 	if err != nil {
-		return nil, xerrors.Errorf("could not listen %s: %w", settings.monitor.Address, err)
+		return nil, xerrors.Errorf("could not listen %s: %w", settings.Monitor.Address, err)
 	}
 
 	server := &http.Server{
-		Handler: promhttp.Handler(),
+		Handler: router,
 	}
-	server.SetKeepAlivesEnabled(settings.monitor.KeepAlived)
+	server.SetKeepAlivesEnabled(settings.Monitor.KeepAlived)
 	return &Monitor{
-		maxConnections: settings.monitor.MaxConnections,
+		maxConnections: settings.Monitor.MaxConnections,
 		listener:       listener,
 		server:         server,
 	}, nil

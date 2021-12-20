@@ -47,12 +47,12 @@ func (c *TrivyClient) ClearCache(ctx context.Context) ([]byte, error) {
 }
 
 type TrivyResponse struct {
-	Target          string               `json:"Target"`
-	Vulnerabilities []TrivyVulnerability `json:"Vulnerabilities"`
-}
-
-func (tr *TrivyResponse) ExtractImage() string {
-	return strings.Split(tr.Target, " ")[0]
+	ArtifactName string `json:"ArtifactName"`
+	ArtifactType string `json:"ArtifactType"`
+	Results      []struct {
+		Target          string               `json:"Target"`
+		Vulnerabilities []TrivyVulnerability `json:"Vulnerabilities"`
+	} `json:"Results"`
 }
 
 type TrivyVulnerability struct {
