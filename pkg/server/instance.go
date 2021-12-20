@@ -14,36 +14,40 @@ const (
 	gracePeriod = 10
 )
 
+// IProcessor defines the interface that need to be implemented by each monitor
 type IProcessor interface {
 	Start() error
 	Stop(context.Context) error
 }
 
-type instance struct {
+// Instance defines the exporter instance
+type Instance struct {
 	Settings   Settings
 	processors []IProcessor
 	Logger     logrus.Logger
 }
 
-// Settings defines the global available settings
+// Settings defines the global server settings
 type Settings struct {
 	Monitor MonitorSettings
-	Trivy   collector.CollectorSettings
+	Trivy   collector.Settings
 }
 
-// NewInstance creates a new prometheus exporter instance
-func NewInstance(settings Settings) *instance {
-	return &instance{
+// NewInstance creates a new exporter instance
+func NewInstance(settings Settings) *Instance {
+	return &Instance{
 		Settings: settings,
 		Logger:   *logrus.New(),
 	}
 }
 
-func (inst *instance) AddProcessor(processor IProcessor) {
+// AddProcessor allows to add monitors to the exporter instance
+func (inst *Instance) AddProcessor(processor IProcessor) {
 	inst.processors = append(inst.processors, processor)
 }
 
-func (inst *instance) Start() {
+// Start brings up the http server for each monitor
+func (inst *Instance) Start() {
 	for _, processor := range inst.processors {
 		go func(processor IProcessor) {
 			defer func() {
@@ -59,7 +63,8 @@ func (inst *instance) Start() {
 	}
 }
 
-func (inst *instance) Shutdown(ctx context.Context) {
+// Shutdown gracefully shutdown of the http server for each monitor
+func (inst *Instance) Shutdown(ctx context.Context) {
 	ctx, cancel := context.WithTimeout(ctx, time.Duration(gracePeriod)*time.Second)
 	defer cancel()
 	for _, p := range inst.processors {

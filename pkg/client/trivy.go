@@ -13,6 +13,29 @@ import (
 // TrivyClient struct
 type TrivyClient struct{}
 
+// TrivyResponse top level struct to unmarshal the required fields from the json output file
+type TrivyResponse struct {
+	ArtifactName string `json:"ArtifactName"`
+	ArtifactType string `json:"ArtifactType"`
+	Results      []struct {
+		Target          string               `json:"Target"`
+		Vulnerabilities []TrivyVulnerability `json:"Vulnerabilities"`
+	} `json:"Results"`
+}
+
+// TrivyVulnerability sub struct to unmarshal the required fields from the json output file
+type TrivyVulnerability struct {
+	VulnerabilityID  string   `json:"VulnerabilityID"`
+	PkgName          string   `json:"PkgName"`
+	InstalledVersion string   `json:"InstalledVersion"`
+	FixedVersion     string   `json:"FixedVersion"`
+	Title            string   `json:"Title"`
+	Description      string   `json:"Description"`
+	Severity         string   `json:"Severity"`
+	References       []string `json:"References"`
+}
+
+// Do implements the core functionality of the client
 func (c *TrivyClient) Do(ctx context.Context, image string) ([]byte, error) {
 	tmpfile, err := ioutil.TempFile("", "*.json")
 	if err != nil {
@@ -38,30 +61,12 @@ func (c *TrivyClient) Do(ctx context.Context, image string) ([]byte, error) {
 	return body, nil
 }
 
+// UpdateDatabase fetches the trivy vulnerability database
 func (c *TrivyClient) UpdateDatabase(ctx context.Context) ([]byte, error) {
 	return exec.CommandContext(ctx, "trivy", "image", "--download-db-only").CombinedOutput()
 }
 
+// ClearCache clears local trivy image cache
 func (c *TrivyClient) ClearCache(ctx context.Context) ([]byte, error) {
 	return exec.CommandContext(ctx, "trivy", "image", "--clear-cache").CombinedOutput()
-}
-
-type TrivyResponse struct {
-	ArtifactName string `json:"ArtifactName"`
-	ArtifactType string `json:"ArtifactType"`
-	Results      []struct {
-		Target          string               `json:"Target"`
-		Vulnerabilities []TrivyVulnerability `json:"Vulnerabilities"`
-	} `json:"Results"`
-}
-
-type TrivyVulnerability struct {
-	VulnerabilityID  string   `json:"VulnerabilityID"`
-	PkgName          string   `json:"PkgName"`
-	InstalledVersion string   `json:"InstalledVersion"`
-	FixedVersion     string   `json:"FixedVersion"`
-	Title            string   `json:"Title"`
-	Description      string   `json:"Description"`
-	Severity         string   `json:"Severity"`
-	References       []string `json:"References"`
 }

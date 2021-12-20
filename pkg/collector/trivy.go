@@ -20,17 +20,19 @@ const (
 	name      = "trivy"
 )
 
+// TrivyCollector defines the trivy collector instance
 type TrivyCollector struct {
 	trivyClient        client.TrivyClient
-	settings           CollectorSettings
+	settings           Settings
 	Vulnerabilities    *prometheus.GaugeVec
 	VulnerabilitiesSum *prometheus.GaugeVec
 	logger             logrus.Logger
 }
 
+// NewTrivyCollector creates a new collector instance
 func NewTrivyCollector(
 	trivyClient client.TrivyClient,
-	settings CollectorSettings,
+	settings Settings,
 	logger logrus.Logger,
 ) *TrivyCollector {
 	return &TrivyCollector{
@@ -62,6 +64,7 @@ func uniqueContainerImages(containers []dtypes.Container) []string {
 	return images
 }
 
+// Scan checks the discovered docker images in parallel and maps the results to prometheus metrics
 func (c *TrivyCollector) Scan(ctx context.Context) error {
 	if _, err := c.trivyClient.UpdateDatabase(ctx); err != nil {
 		return xerrors.Errorf("failed to update database: %w", err)
@@ -151,6 +154,7 @@ func (c *TrivyCollector) Scan(ctx context.Context) error {
 	return nil
 }
 
+// StartLoop re-schedules the next collectors run depending on the configured interval
 func (c *TrivyCollector) StartLoop(ctx context.Context, interval time.Duration) {
 	go func(ctx context.Context) {
 		t := time.NewTicker(interval)
@@ -175,22 +179,26 @@ func (c *TrivyCollector) collectors() []prometheus.Collector {
 	}
 }
 
+// Describe implements the prometheus colletor interface method
 func (c *TrivyCollector) Describe(ch chan<- *prometheus.Desc) {
 	for _, collector := range c.collectors() {
 		collector.Describe(ch)
 	}
 }
 
+// Collect implements the prometheus colletor interface method
 func (c *TrivyCollector) Collect(ch chan<- prometheus.Metric) {
 	for _, collector := range c.collectors() {
 		collector.Collect(ch)
 	}
 }
 
+// Name returns the collectors friendly name
 func (c *TrivyCollector) Name() string {
 	return name
 }
 
-func (c *TrivyCollector) Settings() CollectorSettings {
+// Settings returns the collectors settings
+func (c *TrivyCollector) Settings() Settings {
 	return c.settings
 }

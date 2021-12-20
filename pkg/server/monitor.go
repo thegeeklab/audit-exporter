@@ -22,6 +22,7 @@ const (
 	metricsPath = "/metrics"
 )
 
+// MonitorSettings defines required attributes
 type MonitorSettings struct {
 	Address              string
 	MaxConnections       int64
