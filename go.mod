@@ -12,7 +12,7 @@ require (
 	github.com/opencontainers/image-spec v1.0.2 // indirect
 	github.com/prometheus/client_golang v1.11.0
 	github.com/sirupsen/logrus v1.8.1
-	github.com/urfave/cli/v2 v2.3.0
+	github.com/urfave/cli/v2 v2.4.0
 	golang.org/x/lint v0.0.0-20210508222113-6edffad5e616
 	golang.org/x/net v0.0.0-20211216030914-fe4d6282115f
 	golang.org/x/sys v0.0.0-20211216021012-1d35b9e2eb4e
