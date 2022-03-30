@@ -8,7 +8,7 @@ platform:
 
 steps:
   - name: staticcheck
-    image: golang:1.16
+    image: golang:1.18
     commands:
       - go run honnef.co/go/tools/cmd/staticcheck ./...
     volumes:
@@ -16,7 +16,7 @@ steps:
         path: /go
 
   - name: lint
-    image: golang:1.16
+    image: golang:1.18
     commands:
       - go run golang.org/x/lint/golint -set_exit_status ./...
     volumes:
@@ -24,7 +24,7 @@ steps:
         path: /go
 
   - name: vet
-    image: golang:1.16
+    image: golang:1.18
     commands:
       - go vet ./...
     volumes:
@@ -32,7 +32,7 @@ steps:
         path: /go
 
   - name: test
-    image: golang:1.16
+    image: golang:1.18
     commands:
       - go test -race -coverprofile=coverage.txt -covermode=atomic ./...
     volumes:
@@ -67,7 +67,7 @@ platform:
 
 steps:
   - name: build
-    image: techknowlogick/xgo:go-1.16.x
+    image: techknowlogick/xgo:go-1.18.x
     commands:
       - "[ -z \"${DRONE_TAG}\" ] && BUILD_VERSION=${DRONE_COMMIT_SHA:0:8} || BUILD_VERSION=${DRONE_TAG##v}"
       - mkdir -p release/
@@ -166,6 +166,6 @@ depends_on:
 
 ---
 kind: signature
-hmac: e83fb1787b9e9c5bd0cf751347230d5c7c7c620351b9b878ed221d843e0a5788
+hmac: 01f6a5edff493478fa9ad89fe618621e4fe1472ef3e4354e11c59b37d23b01b6
 
 ...
