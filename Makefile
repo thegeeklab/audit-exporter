@@ -63,7 +63,7 @@ generate:
 
 .PHONY: test
 test:
-	$(GO) test -race -coverprofile=coverage.txt -covermode=atomic ./...
+	$(GO) test -race -coverprofile=coverage.out -covermode=atomic ./...
 
 .PHONY: build
 build: $(DIST)/$(EXECUTABLE)
