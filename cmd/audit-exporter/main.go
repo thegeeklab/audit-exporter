@@ -2,6 +2,7 @@ package main
 
 import (
 	"context"
+	"fmt"
 	"os"
 	"os/signal"
 	"syscall"
@@ -14,16 +15,22 @@ import (
 	"golang.org/x/xerrors"
 )
 
-// Version of current build
-var Version = "devel"
+var (
+	BuildVersion = "devel"
+	BuildDate    = "00000000"
+)
 
 func main() {
 	settings := &server.Settings{}
 
+	cli.VersionPrinter = func(c *cli.Context) {
+		fmt.Printf("%s version=%s date=%s\n", c.App.Name, c.App.Version, BuildDate)
+	}
+
 	app := cli.NewApp()
 	app.Name = "audit-exporter"
 	app.Usage = "Prometheus exporter for various security tools."
-	app.Version = Version
+	app.Version = BuildVersion
 	app.Flags = globalFlags(settings)
 	app.Action = run(settings)
 
