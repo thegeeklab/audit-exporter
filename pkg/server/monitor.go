@@ -61,7 +61,7 @@ func NewMonitor(settings MonitorSettings, logger *logrus.Logger, mcollectors []c
 	var err error
 	if settings.ReUsePort {
 		listenConfig := &net.ListenConfig{
-			Control: func(network string, address string, c syscall.RawConn) error {
+			Control: func(network, address string, c syscall.RawConn) error {
 				var innerErr error
 				if err := c.Control(func(s uintptr) {
 					innerErr = unix.SetsockoptInt(int(s), unix.SOL_SOCKET, unix.SO_REUSEPORT, 1)
