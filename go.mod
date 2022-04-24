@@ -12,7 +12,7 @@ require (
 	golang.org/x/net v0.0.0-20220325170049-de3da57026de
 	golang.org/x/sys v0.0.0-20220330033206-e17cdc41300f
 	golang.org/x/xerrors v0.0.0-20200804184101-5ec99f83aff1
-	honnef.co/go/tools v0.3.0
+	honnef.co/go/tools v0.3.1
 )
 
 require (
