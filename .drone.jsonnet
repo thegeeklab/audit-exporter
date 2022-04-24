@@ -89,7 +89,7 @@ local PipelineBuildBinaries = {
       name: 'executable',
       image: 'alpine',
       commands: [
-        '$(find dist/ -executable -type f | grep ${DRONE_REPO_NAME}-linux-amd64) --help',
+        '$(find dist/ -executable -type f -iname ${DRONE_REPO_NAME}-linux-amd64) --help',
       ],
     },
     {

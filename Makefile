@@ -3,7 +3,7 @@ GOFUMPT_PACKAGE_VERSION := v0.3.1
 # renovate: datasource=github-releases depName=golangci/golangci-lint
 GOLANGCI_LINT_PACKAGE_VERSION := v1.45.2
 
-EXECUTABLE := drone-docker
+EXECUTABLE := audit-exporter
 
 DIST := dist
 DIST_DIRS := $(DIST)
