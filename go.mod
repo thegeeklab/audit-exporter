@@ -7,7 +7,7 @@ require (
 	github.com/gorilla/mux v1.8.0
 	github.com/prometheus/client_golang v1.12.1
 	github.com/sirupsen/logrus v1.8.1
-	github.com/urfave/cli/v2 v2.4.0
+	github.com/urfave/cli/v2 v2.4.8
 	golang.org/x/net v0.0.0-20220325170049-de3da57026de
 	golang.org/x/sys v0.0.0-20220330033206-e17cdc41300f
 	golang.org/x/xerrors v0.0.0-20200804184101-5ec99f83aff1
