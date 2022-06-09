@@ -10,7 +10,7 @@ require (
 	github.com/urfave/cli/v2 v2.5.1
 	golang.org/x/net v0.0.0-20220325170049-de3da57026de
 	golang.org/x/sys v0.0.0-20220330033206-e17cdc41300f
-	golang.org/x/xerrors v0.0.0-20200804184101-5ec99f83aff1
+	golang.org/x/xerrors v0.0.0-20220609144429-65e65417b02f
 )
 
 require (
