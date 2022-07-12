@@ -34,7 +34,7 @@ make build
 TBD
 
 ```Text
- HELP trivy_vulnerabilities Vulnerabilities detected by trivy
+HELP trivy_vulnerabilities Vulnerabilities detected by trivy
 # TYPE trivy_vulnerabilities gauge
 trivy_vulnerabilities{artifactName="mongo:3.6",artifactType="container_image",fixedVersion="",installedVersion="1.0.2g-1ubuntu4.19",pkgName="libssl1.0.0",severity="LOW",vulnerabilityId="CVE-2021-3601"} 1
 trivy_vulnerabilities{artifactName="mongo:3.6",artifactType="container_image",fixedVersion="",installedVersion="1.0.2g-1ubuntu4.19",pkgName="openssl",severity="LOW",vulnerabilityId="CVE-2021-3601"} 1
@@ -65,7 +65,7 @@ TBD
 
 ## Contributors
 
-Special thanks goes to all [contributors](https://github.com/thegeeklab/audit-exporter/graphs/contributors). If you would like to contribute, please see the [instructions](https://github.com/thegeeklab/audit-exporter/blob/main/CONTRIBUTING.md).
+Special thanks to all [contributors](https://github.com/thegeeklab/audit-exporter/graphs/contributors). If you would like to contribute, please see the [instructions](https://github.com/thegeeklab/audit-exporter/blob/main/CONTRIBUTING.md).
 
 ## License
 
