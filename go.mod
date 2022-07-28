@@ -8,8 +8,8 @@ require (
 	github.com/prometheus/client_golang v1.12.1
 	github.com/sirupsen/logrus v1.8.1
 	github.com/urfave/cli/v2 v2.5.1
-	golang.org/x/net v0.0.0-20220325170049-de3da57026de
-	golang.org/x/sys v0.0.0-20220330033206-e17cdc41300f
+	golang.org/x/net v0.0.0-20220728211354-c7608f3a8462
+	golang.org/x/sys v0.0.0-20220728004956-3c1f35247d10
 	golang.org/x/xerrors v0.0.0-20200804184101-5ec99f83aff1
 )
 
